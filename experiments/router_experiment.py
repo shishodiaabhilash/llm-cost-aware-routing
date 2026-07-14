@@ -293,7 +293,9 @@ def main():
     print("while spending far less (lower cost / paid_fraction).")
 
     with open(args.out, "w") as f:
-        json.dump({"config": vars(args), "results": results,
+        cfg = vars(args).copy()
+        cfg["out"] = os.path.basename(cfg["out"])  # avoid leaking local paths
+        json.dump({"config": cfg, "results": results,
                    "records": [{k: v for k, v in r.items()
                                 if k not in ("weak", "strong")} for r in records]},
                   f, indent=2)

@@ -109,19 +109,41 @@ Both scripts print a summary table and save a JSON results file.
 
 ## Example measured results
 
-These are illustrative runs on the included task suite (your numbers will vary
-by hardware, models, and task mix):
+Measured on the included 44-problem suite (Python, execution-based pass@1). Your
+numbers will vary by hardware, models, and task mix.
 
-**Capability separation on the hardest ("brutal") tasks**
+**Model capability — pass@1 by difficulty tier**
 
-| Class | Average pass@1 |
-|-------|:--------------:|
-| Small local free models | ~46% |
-| Large cloud-based models | ~96% |
+| Model | Class | Overall | Easy | Hard | Brutal |
+|-------|-------|:---:|:---:|:---:|:---:|
+| llama3.2 (3B) | small local free | 73% | 100% | 100% | 42% |
+| gemma3 | small local free | 93% | 100% | 88% | 83% |
+| phi4-mini | small local free | 52% | 100% | 75% | 17% |
+| gpt-oss:120b | large cloud | 100% | 100% | 100% | 100% |
+| qwen3-coder:480b | large cloud | 98% | 100% | 100% | 92% |
 
-**Router on a mixed workload** — matched the always-cloud baseline at **100% pass@1**
-while sending only a fraction of requests to the large model, because the reactive
-verifier caught cases the free model silently failed and escalated them.
+Small local models are competitive on easy work but lag on the hardest tier
+(avg ~47% vs ~96% for large cloud models) — the headroom a router exploits.
+
+**Router vs baselines** (small local `llama3.2` + large cloud `gpt-oss:120b`, τ=0.45)
+
+| Strategy | pass@1 | cloud fraction | cost | savings |
+|----------|:---:|:---:|:---:|:---:|
+| always free (local) | 80% | 0% | $0.0000 | — |
+| always cloud (baseline) | 100% | 100% | $0.0491 | 0% |
+| random | 84% | 41% | $0.0194 | 61% |
+| **router (ours)** | **100%** | **52%** | **$0.0287** | **41%** |
+
+The router **matched the large cloud model's 100% pass@1** while sending only
+**52%** of requests to the large tier — the reactive verifier caught 6 cases the
+small model silently failed and escalated exactly those. (Dollar figures use
+configurable, illustrative pricing, not vendor prices.)
+
+> **Scope & honesty:** we evaluate *small local free* models and *large
+> cloud-based* models (comparable to paid-tier models). We do **not** test metered
+> paid APIs here; that is future work. The experimental verifier executes each
+> task's unit tests (an *oracle*), so escalation results are an upper bound for
+> the reactive mechanism.
 
 ---
 

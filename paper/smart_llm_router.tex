@@ -52,14 +52,20 @@ CLI clients need no changes. We formalize the routing problem as constrained
 cost minimization subject to a quality floor, describe a \emph{classify--route
 --verify} pipeline with a confidence-based escalation loop, and present an
 analytic cost model showing that expected spend is proportional to the fraction
-of requests that ultimately reach a paid tier. This is a concept (position)
-paper: we do not report experiments, but we contribute a detailed, reproducible
-evaluation protocol---datasets, metrics, baselines, and ablations---for the
-community to validate free-first routing for software-engineering workloads.
+of requests that ultimately reach a paid tier. We report a preliminary
+empirical study on a 44-problem coding suite with executable unit tests, using
+\emph{small locally-running (free) models} and \emph{large cloud-based models}
+that are comparable in capability to paid-tier hosted models; evaluating true
+metered paid APIs is left as future work. On the hardest problems small local
+models solve far fewer tasks than large models, yet the router---by keeping
+easy requests free and escalating only when a verifier flags a failure---matches
+the strong model's task-success rate while sending only a fraction of requests
+to the large tier. We also provide a reproducible evaluation protocol (datasets,
+metrics, baselines, and ablations) for larger-scale validation.
 We situate the design against existing routers and gateways
 (e.g., RouteLLM, LiteLLM, OpenRouter, Not Diamond) and highlight its
-distinguishing combination of free-first defaults, automatic free/paid
-escalation, local-privacy routing, and per-request budget guardrails.
+distinguishing combination of free-first defaults, automatic escalation,
+local-privacy routing, and per-request budget guardrails.
 \end{abstract}
 
 \noindent\textbf{Keywords:} LLM routing, model cascades, cost-aware inference,
@@ -149,6 +155,16 @@ Free-first routing is enabled by efficient local inference. Systems such as
 vLLM~\cite{vllm} and packagers such as Ollama~\cite{ollama} make it practical to
 serve capable open models (e.g., code-specialized models) on local hardware at
 zero marginal cost and with data locality.
+
+\paragraph{Code benchmarks.}
+Our evaluation follows the lineage of standard code-generation benchmarks that
+grade models by executing generated programs against unit tests:
+HumanEval~\cite{humaneval} and MBPP~\cite{mbpp} for function-level synthesis,
+BigCodeBench~\cite{bigcodebench} for more realistic library usage,
+LiveCodeBench~\cite{livecodebench} for contamination-resistant, continuously
+updated problems, and SWE-bench~\cite{swebench} for repository-level issue
+resolution. We adopt the same execution-based, \emph{pass@1} methodology on a
+compact suite spanning five difficulty tiers (Section~\ref{sec:eval}).
 
 \paragraph{Positioning.}
 Table~\ref{tab:landscape} summarizes representative systems. Relative to prior
@@ -351,10 +367,109 @@ figures are illustrative; realized savings depend on the workload's difficulty
 distribution and verifier accuracy, which motivates the evaluation below.
 
 % =====================================================================
-\section{Proposed Evaluation}
+\section{Empirical Evaluation}
+\label{sec:empirical}
+We report a preliminary study that instantiates the router and measures both the
+capability gap it exploits and its end-to-end behavior.
+
+\subsection{Setup}
+We implement the gateway as a stateless service backed by
+Ollama~\cite{ollama}. We evaluate two model classes, using deliberately honest
+labels:
+\begin{itemize}
+  \item \textbf{Small local free models} run locally at zero marginal cost and
+        are always available offline: \texttt{llama3.2} (3B), \texttt{gemma3},
+        and \texttt{phi4-mini}.
+  \item \textbf{Large cloud-based models} are large models served from Ollama's
+        cloud that are comparable in capability to paid-tier hosted models:
+        \texttt{gpt-oss:120b} and \texttt{qwen3-coder:480b}. We do \emph{not}
+        evaluate metered commercial paid APIs; extending the study to true paid
+        tiers is future work.
+\end{itemize}
+Our workload is a suite of $44$ Python programming problems spanning five
+difficulty tiers (easy, medium, hard, expert, and ``brutal''), each with hidden
+unit tests. We grade with execution-based \emph{pass@1}: a task counts as solved
+if the model's generated function passes all its tests, run in an isolated
+subprocess with a timeout. In these experiments the reactive verifier executes
+the task's unit tests, i.e., it is an \emph{oracle} verifier; realistic
+deployment verifiers (generated tests, self-consistency, critic models) are
+weaker, so our escalation results are an \emph{upper bound} on what reactive
+verification recovers. Reported dollar figures use the configurable, illustrative
+pricing of Section~\ref{sec:cost}, not vendor prices.
+
+\subsection{Capability gap between model classes}
+Table~\ref{tab:bench} reports per-tier pass@1 for each model on the full suite.
+The pattern that motivates free-first routing is clear: on easy and medium
+problems the small local models are competitive with the large models, but on
+the hardest (``brutal'') tier they fall well behind---averaging $47\%$ versus
+$96\%$ for the large cloud models---so difficulty-aware routing has real headroom.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Execution-based pass@1 on the 44-problem suite (higher is better).
+Small local free models match large models on easy work but lag sharply on the
+hardest tier, which is exactly what a difficulty-aware router can exploit.}
+\label{tab:bench}
+\begin{tabular}{@{}llcccccc@{}}
+\toprule
+Model & Class & Overall & Easy & Med. & Hard & Exp. & Brutal \\
+\midrule
+\texttt{llama3.2} (3B)      & small local free & 73\% & 100\% & 100\% & 100\% & 58\%  & 42\%  \\
+\texttt{gemma3}             & small local free & 93\% & 100\% & 100\% & 88\%  & 100\% & 83\%  \\
+\texttt{phi4-mini}          & small local free & 52\% & 100\% & 88\%  & 75\%  & 33\%  & 17\%  \\
+\midrule
+\texttt{gpt-oss:120b}       & large cloud      & 100\%& 100\% & 100\% & 100\% & 100\% & 100\% \\
+\texttt{qwen3-coder:480b}   & large cloud      & 98\% & 100\% & 100\% & 100\% & 100\% & 92\%  \\
+\midrule
+\emph{avg small local free} &                  & 73\% &       &       &       &       & 47\%  \\
+\emph{avg large cloud}      &                  & 99\% &       &       &       &       & 96\%  \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Router effectiveness}
+\label{sec:router-results}
+We run the four strategies of Section~\ref{sec:decision} on the same suite with
+\texttt{llama3.2} as the small local (free) tier and \texttt{gpt-oss:120b} as the
+large cloud tier, threshold $\tau{=}0.45$.
+Table~\ref{tab:router} summarizes the outcome. Always-free solves only the easy
+majority; always-cloud solves everything at full cost. The router
+\emph{matches the large model's task-success rate} while routing a substantial
+share of requests to the free tier, because the reactive (oracle) verifier
+catches cases the predictive classifier under-rated and escalates only those.
+Consistent with Eq.~\eqref{eq:savings}, realized cost tracks the effective
+paid fraction $p$. Six requests were escalated after a silent local failure
+(e.g., regular-expression matching, the parenthetical calculator, and
+decode-string), and all six were recovered by the large model---directly
+illustrating the value of reactive verification.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Router versus baselines on the 44-problem suite (small local tier
+\texttt{llama3.2}; large cloud tier \texttt{gpt-oss:120b}; $\tau{=}0.45$). The
+router matches the large model's pass@1 while sending only $52\%$ of requests to
+the large cloud tier. Cost uses the illustrative pricing of
+Section~\ref{sec:cost}, not vendor prices.}
+\label{tab:router}
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+Strategy & pass@1 & Cloud frac.\ $p$ & Cost & Avg.\ latency & Savings \\
+\midrule
+Always free (local)    & 80\%  & 0\%   & \$0.0000 & 2.41\,s & 100\% \\
+Always cloud (baseline)& 100\% & 100\% & \$0.0491 & 4.06\,s & 0\% \\
+Random                 & 84\%  & 41\%  & \$0.0194 & 3.04\,s & 61\% \\
+\textbf{Router (ours)} & \textbf{100\%} & 52\% & \$0.0287 & 3.80\,s & \textbf{41\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% =====================================================================
+\section{Proposed Larger-Scale Evaluation}
 \label{sec:eval}
-Because this is a concept paper, we do not report results; instead we specify a
-protocol designed for reproducibility.
+Our study above is small and uses an oracle verifier; we outline a fuller
+protocol for community-scale validation.
 
 \paragraph{Datasets and workloads.}
 (i)~Code generation: HumanEval~\cite{humaneval} and MBPP~\cite{mbpp};
@@ -475,6 +590,19 @@ J.~Austin, A.~Odena, M.~Nye, et~al.
 C.~E.~Jimenez, J.~Yang, A.~Wettig, S.~Yao, K.~Pei, O.~Press, and K.~Narasimhan.
 \newblock SWE-bench: Can Language Models Resolve Real-World GitHub Issues?
 \newblock \emph{ICLR}, 2024. \url{https://arxiv.org/abs/2310.06770}
+
+\bibitem{livecodebench}
+N.~Jain, K.~Han, A.~Gu, W.-D.~Li, F.~Yan, T.~Zhang, S.~Wang, A.~Solar-Lezama,
+K.~Sen, and I.~Stoica.
+\newblock LiveCodeBench: Holistic and Contamination-Free Evaluation of Large
+Language Models for Code.
+\newblock \emph{arXiv:2403.07974}, 2024. \url{https://arxiv.org/abs/2403.07974}
+
+\bibitem{bigcodebench}
+T.~Y.~Zhuo, M.~C.~Vu, J.~Chim, et~al.
+\newblock BigCodeBench: Benchmarking Code Generation with Diverse Function Calls
+and Complex Instructions.
+\newblock \emph{arXiv:2406.15877}, 2024. \url{https://arxiv.org/abs/2406.15877}
 
 \bibitem{mtbench}
 L.~Zheng, W.-L.~Chiang, Y.~Sheng, et~al.

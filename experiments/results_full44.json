@@ -1,0 +1,611 @@
+{
+  "config": {
+    "weak": "llama3.2:latest",
+    "strong": "gpt-oss:120b-cloud",
+    "tau": 0.45,
+    "limit": 0,
+    "difficulty": "",
+    "seed": 0,
+    "out": "results_full44.json"
+  },
+  "results": {
+    "always_weak": {
+      "passk": 0.7954545454545454,
+      "paid_frac": 0.0,
+      "cost": 0.0,
+      "avg_lat": 2.411404696377841
+    },
+    "always_strong": {
+      "passk": 1.0,
+      "paid_frac": 1.0,
+      "cost": 0.04906399999999998,
+      "avg_lat": 4.057986871762709
+    },
+    "random": {
+      "passk": 0.8409090909090909,
+      "paid_frac": 0.4090909090909091,
+      "cost": 0.019377000000000002,
+      "avg_lat": 3.042400522665544
+    },
+    "router": {
+      "passk": 1.0,
+      "paid_frac": 0.5227272727272727,
+      "cost": 0.028715000000000004,
+      "avg_lat": 3.7970728007229892
+    }
+  },
+  "records": [
+    {
+      "id": "add",
+      "difficulty": "easy",
+      "x": 0.22499999999999998,
+      "router": {
+        "tier": "weak",
+        "passed": true,
+        "cost": 0.0,
+        "latency": 0.6413240432739258,
+        "paid": false
+      },
+      "random_strong": false
+    },
+    {
+      "id": "reverse",
+      "difficulty": "easy",
+      "x": 0.11666666666666667,
+      "router": {
+        "tier": "weak",
+        "passed": true,
+        "cost": 0.0,
+        "latency": 0.6069540977478027,
+        "paid": false
+      },
+      "random_strong": false
+    },
+    {
+      "id": "is_even",
+      "difficulty": "easy",
+      "x": 0.11833333333333333,
+      "router": {
+        "tier": "weak",
+        "passed": true,
+        "cost": 0.0,
+        "latency": 0.7104640007019043,
+        "paid": false
+      },
+      "random_strong": true
+    },
+    {
+      "id": "count_vowels",
+      "difficulty": "easy",
+      "x": 0.18833333333333332,
+      "router": {
+        "tier": "weak",
+        "passed": true,
+        "cost": 0.0,
+        "latency": 0.8700292110443115,
+        "paid": false
+      },
+      "random_strong": true
+    },
+    {
+      "id": "fib",
+      "difficulty": "medium",
+      "x": 0.2783333333333333,
+      "router": {
+        "tier": "weak",
+        "passed": true,
+        "cost": 0.0,
+        "latency": 0.9715249538421631,
+        "paid": false
+      },
+      "random_strong": false
+    },
+    {
+      "id": "is_prime",
+      "difficulty": "medium",
+      "x": 0.25666666666666665,
+      "router": {
+        "tier": "weak",
+        "passed": true,
+        "cost": 0.0,
+        "latency": 1.3690271377563477,
+        "paid": false
+      },
+      "random_strong": true
+    },
+    {
+      "id": "two_sum",
+      "difficulty": "medium",
+      "x": 0.37333333333333335,
+      "router": {
+        "tier": "weak",
+        "passed": true,
+        "cost": 0.0,
+        "latency": 1.609766960144043,
+        "paid": false
+      },
+      "random_strong": false
+    },
+    {
+      "id": "valid_parens",
+      "difficulty": "medium",
+      "x": 0.4583333333333333,
+      "router": {
+        "tier": "strong",
+        "passed": true,
+        "cost": 0.000859,
+        "latency": 3.1277172565460205,
+        "paid": true
+      },
+      "random_strong": true
+    },
+    {
+      "id": "lcs",
+      "difficulty": "hard",
+      "x": 1.0,
+      "router": {
+        "tier": "strong",
+        "passed": true,
+        "cost": 0.001016,
+        "latency": 3.431730031967163,
+        "paid": true
+      },
+      "random_strong": true
+    },
+    {
+      "id": "merge_intervals",
+      "difficulty": "hard",
+      "x": 0.7383333333333333,
+      "router": {
+        "tier": "strong",
+        "passed": true,
+        "cost": 0.0009989999999999999,
+        "latency": 3.9111852645874023,
+        "paid": true
+      },
+      "random_strong": false
+    },
+    {
+      "id": "word_break",
+      "difficulty": "hard",
+      "x": 1.0,
+      "router": {
+        "tier": "strong",
+        "passed": true,
+        "cost": 0.001081,
+        "latency": 4.0828869342803955,
+        "paid": true
+      },
+      "random_strong": false
+    },
+    {
+      "id": "edit_distance",
+      "difficulty": "hard",
+      "x": 1.0,
+      "router": {
+        "tier": "strong",
+        "passed": true,
+        "cost": 0.0011780000000000002,
+        "latency": 4.180193901062012,
+        "paid": true
+      },
+      "random_strong": false
+    },
+    {
+      "id": "min_window",
+      "difficulty": "expert",
+      "x": 0.35833333333333334,
+      "router": {
+        "tier": "weak",
+        "passed": true,
+        "cost": 0.0,
+        "latency": 4.939044713973999,
+        "paid": false
+      },
+      "random_strong": true
+    },
+    {
+      "id": "calculator",
+      "difficulty": "expert",
+      "x": 0.4,
+      "router": {
+        "tier": "strong(esc)",
+        "passed": true,
+        "cost": 0.0017759999999999998,
+        "latency": 11.833913803100586,
+        "paid": true
+      },
+      "random_strong": false
+    },
+    {
+      "id": "course_schedule",
+      "difficulty": "expert",
+      "x": 0.75,
+      "router": {
+        "tier": "strong",
+        "passed": true,
+        "cost": 0.000919,
+        "latency": 4.149788856506348,
+        "paid": true
+      },
+      "random_strong": false
+    },
+    {
+      "id": "coin_change",
+      "difficulty": "expert",
+      "x": 0.705,
+      "router": {
+        "tier": "strong",
+        "passed": true,
+        "cost": 0.0009739999999999998,
+        "latency": 3.453953981399536,
+        "paid": true
+      },
+      "random_strong": true
+    },
+    {
+      "id": "trap_rain",
+      "difficulty": "expert",
+      "x": 0.34,
+      "router": {
+        "tier": "strong(esc)",
+        "passed": true,
+        "cost": 0.0009149999999999999,
+        "latency": 6.25049614906311,
+        "paid": true
+      },
+      "random_strong": false
+    },
+    {
+      "id": "lru_cache",
+      "difficulty": "expert",
+      "x": 0.4,
+      "router": {
+        "tier": "weak",
+        "passed": true,
+        "cost": 0.0,
+        "latency": 2.7566657066345215,
+        "paid": false
+      },
+      "random_strong": false
+    },
+    {
+      "id": "word_ladder",
+      "difficulty": "expert",
+      "x": 0.52,
+      "router": {
+        "tier": "strong",
+        "passed": true,
+        "cost": 0.001465,
+        "latency": 6.043141841888428,
+        "paid": true
+      },
+      "random_strong": false
+    },
+    {
+      "id": "max_subarray_product",
+      "difficulty": "expert",
+      "x": 0.31666666666666665,
+      "router": {
+        "tier": "weak",
+        "passed": true,
+        "cost": 0.0,
+        "latency": 2.166457176208496,
+        "paid": false
+      },
+      "random_strong": false
+    },
+    {
+      "id": "climb_stairs",
+      "difficulty": "medium",
+      "x": 0.22666666666666666,
+      "router": {
+        "tier": "weak",
+        "passed": true,
+        "cost": 0.0,
+        "latency": 1.854477882385254,
+        "paid": false
+      },
+      "random_strong": true
+    },
+    {
+      "id": "gcd",
+      "difficulty": "medium",
+      "x": 0.16833333333333333,
+      "router": {
+        "tier": "weak",
+        "passed": true,
+        "cost": 0.0,
+        "latency": 0.8755388259887695,
+        "paid": false
+      },
+      "random_strong": false
+    },
+    {
+      "id": "roman_to_int",
+      "difficulty": "medium",
+      "x": 0.19166666666666668,
+      "router": {
+        "tier": "weak",
+        "passed": true,
+        "cost": 0.0,
+        "latency": 2.710129737854004,
+        "paid": false
+      },
+      "random_strong": false
+    },
+    {
+      "id": "binary_search",
+      "difficulty": "medium",
+      "x": 0.485,
+      "router": {
+        "tier": "strong",
+        "passed": true,
+        "cost": 0.000779,
+        "latency": 2.3871009349823,
+        "paid": true
+      },
+      "random_strong": false
+    },
+    {
+      "id": "kadane",
+      "difficulty": "hard",
+      "x": 0.3666666666666667,
+      "router": {
+        "tier": "weak",
+        "passed": true,
+        "cost": 0.0,
+        "latency": 1.5957918167114258,
+        "paid": false
+      },
+      "random_strong": true
+    },
+    {
+      "id": "rotate_matrix",
+      "difficulty": "hard",
+      "x": 0.3383333333333333,
+      "router": {
+        "tier": "weak",
+        "passed": true,
+        "cost": 0.0,
+        "latency": 0.7532558441162109,
+        "paid": false
+      },
+      "random_strong": true
+    },
+    {
+      "id": "spiral_order",
+      "difficulty": "hard",
+      "x": 0.345,
+      "router": {
+        "tier": "weak",
+        "passed": true,
+        "cost": 0.0,
+        "latency": 1.8856801986694336,
+        "paid": false
+      },
+      "random_strong": true
+    },
+    {
+      "id": "longest_palindrome",
+      "difficulty": "hard",
+      "x": 0.5249999999999999,
+      "router": {
+        "tier": "strong",
+        "passed": true,
+        "cost": 0.001619,
+        "latency": 5.0433878898620605,
+        "paid": true
+      },
+      "random_strong": false
+    },
+    {
+      "id": "decode_ways",
+      "difficulty": "expert",
+      "x": 0.7766666666666666,
+      "router": {
+        "tier": "strong",
+        "passed": true,
+        "cost": 0.0016580000000000002,
+        "latency": 6.224102973937988,
+        "paid": true
+      },
+      "random_strong": false
+    },
+    {
+      "id": "unique_paths",
+      "difficulty": "expert",
+      "x": 0.6866666666666666,
+      "router": {
+        "tier": "strong",
+        "passed": true,
+        "cost": 0.001006,
+        "latency": 3.9830737113952637,
+        "paid": true
+      },
+      "random_strong": false
+    },
+    {
+      "id": "num_islands",
+      "difficulty": "expert",
+      "x": 0.315,
+      "router": {
+        "tier": "weak",
+        "passed": true,
+        "cost": 0.0,
+        "latency": 3.5427939891815186,
+        "paid": false
+      },
+      "random_strong": true
+    },
+    {
+      "id": "wildcard_match",
+      "difficulty": "expert",
+      "x": 0.33166666666666667,
+      "router": {
+        "tier": "strong(esc)",
+        "passed": true,
+        "cost": 0.0015149999999999999,
+        "latency": 9.044308185577393,
+        "paid": true
+      },
+      "random_strong": false
+    },
+    {
+      "id": "regex_match",
+      "difficulty": "brutal",
+      "x": 0.3566666666666667,
+      "router": {
+        "tier": "strong(esc)",
+        "passed": true,
+        "cost": 0.001908,
+        "latency": 10.438519954681396,
+        "paid": true
+      },
+      "random_strong": true
+    },
+    {
+      "id": "longest_valid_parens",
+      "difficulty": "brutal",
+      "x": 0.7316666666666666,
+      "router": {
+        "tier": "strong",
+        "passed": true,
+        "cost": 0.001226,
+        "latency": 4.230008125305176,
+        "paid": true
+      },
+      "random_strong": false
+    },
+    {
+      "id": "largest_rectangle",
+      "difficulty": "brutal",
+      "x": 0.46,
+      "router": {
+        "tier": "strong",
+        "passed": true,
+        "cost": 0.001129,
+        "latency": 4.096728801727295,
+        "paid": true
+      },
+      "random_strong": false
+    },
+    {
+      "id": "min_jumps",
+      "difficulty": "brutal",
+      "x": 0.32666666666666666,
+      "router": {
+        "tier": "weak",
+        "passed": true,
+        "cost": 0.0,
+        "latency": 2.966325283050537,
+        "paid": false
+      },
+      "random_strong": true
+    },
+    {
+      "id": "candy",
+      "difficulty": "brutal",
+      "x": 0.4,
+      "router": {
+        "tier": "weak",
+        "passed": true,
+        "cost": 0.0,
+        "latency": 2.59421706199646,
+        "paid": false
+      },
+      "random_strong": false
+    },
+    {
+      "id": "sliding_window_max",
+      "difficulty": "brutal",
+      "x": 0.31833333333333336,
+      "router": {
+        "tier": "weak",
+        "passed": true,
+        "cost": 0.0,
+        "latency": 2.3103389739990234,
+        "paid": false
+      },
+      "random_strong": true
+    },
+    {
+      "id": "n_queens",
+      "difficulty": "brutal",
+      "x": 0.4083333333333333,
+      "router": {
+        "tier": "weak",
+        "passed": true,
+        "cost": 0.0,
+        "latency": 3.2913930416107178,
+        "paid": false
+      },
+      "random_strong": false
+    },
+    {
+      "id": "calc_paren",
+      "difficulty": "brutal",
+      "x": 0.34,
+      "router": {
+        "tier": "strong(esc)",
+        "passed": true,
+        "cost": 0.001545,
+        "latency": 9.882081270217896,
+        "paid": true
+      },
+      "random_strong": false
+    },
+    {
+      "id": "lis",
+      "difficulty": "brutal",
+      "x": 1.0,
+      "router": {
+        "tier": "strong",
+        "passed": true,
+        "cost": 0.0009229999999999999,
+        "latency": 3.066354751586914,
+        "paid": true
+      },
+      "random_strong": true
+    },
+    {
+      "id": "burst_balloons",
+      "difficulty": "brutal",
+      "x": 1.0,
+      "router": {
+        "tier": "strong",
+        "passed": true,
+        "cost": 0.001461,
+        "latency": 4.813708066940308,
+        "paid": true
+      },
+      "random_strong": true
+    },
+    {
+      "id": "decode_string",
+      "difficulty": "brutal",
+      "x": 0.32166666666666666,
+      "router": {
+        "tier": "strong(esc)",
+        "passed": true,
+        "cost": 0.0012540000000000001,
+        "latency": 6.1976847648620605,
+        "paid": true
+      },
+      "random_strong": false
+    },
+    {
+      "id": "partition_equal",
+      "difficulty": "brutal",
+      "x": 0.775,
+      "router": {
+        "tier": "strong",
+        "passed": true,
+        "cost": 0.00151,
+        "latency": 6.1779351234436035,
+        "paid": true
+      },
+      "random_strong": true
+    }
+  ]
+}

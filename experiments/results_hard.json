@@ -1,0 +1,91 @@
+{
+  "config": {
+    "weak": "llama3.2:latest",
+    "strong": "qwen3:latest",
+    "tau": 0.55,
+    "limit": 0,
+    "difficulty": "hard",
+    "seed": 0,
+    "out": "results_hard.json"
+  },
+  "results": {
+    "always_weak": {
+      "passk": 1.0,
+      "paid_frac": 0.0,
+      "cost": 0.0,
+      "avg_lat": 2.9540197253227234
+    },
+    "always_strong": {
+      "passk": 1.0,
+      "paid_frac": 1.0,
+      "cost": 0.035598,
+      "avg_lat": 135.98206025362015
+    },
+    "random": {
+      "passk": 1.0,
+      "paid_frac": 0.5,
+      "cost": 0.026145,
+      "avg_lat": 102.21605616807938
+    },
+    "router": {
+      "passk": 1.0,
+      "paid_frac": 1.0,
+      "cost": 0.035598,
+      "avg_lat": 135.98206025362015
+    }
+  },
+  "records": [
+    {
+      "id": "lcs",
+      "difficulty": "hard",
+      "x": 1.0,
+      "router": {
+        "tier": "strong",
+        "passed": true,
+        "cost": 0.0062510000000000005,
+        "latency": 94.00071215629578,
+        "paid": true
+      },
+      "random_strong": false
+    },
+    {
+      "id": "merge_intervals",
+      "difficulty": "hard",
+      "x": 0.7383333333333333,
+      "router": {
+        "tier": "strong",
+        "passed": true,
+        "cost": 0.0032020000000000004,
+        "latency": 46.849738121032715,
+        "paid": true
+      },
+      "random_strong": false
+    },
+    {
+      "id": "word_break",
+      "difficulty": "hard",
+      "x": 1.0,
+      "router": {
+        "tier": "strong",
+        "passed": true,
+        "cost": 0.013999000000000001,
+        "latency": 216.9908368587494,
+        "paid": true
+      },
+      "random_strong": true
+    },
+    {
+      "id": "edit_distance",
+      "difficulty": "hard",
+      "x": 1.0,
+      "router": {
+        "tier": "strong",
+        "passed": true,
+        "cost": 0.012145999999999999,
+        "latency": 186.0869538784027,
+        "paid": true
+      },
+      "random_strong": true
+    }
+  ]
+}

@@ -1,0 +1,299 @@
+{
+  "config": {
+    "weak": "llama3.2:latest",
+    "strong": "qwen3-coder:480b-cloud",
+    "tau": 0.45,
+    "limit": 0,
+    "difficulty": "",
+    "seed": 0,
+    "out": "results_full.json"
+  },
+  "results": {
+    "always_weak": {
+      "passk": 0.8,
+      "paid_frac": 0.0,
+      "cost": 0.0,
+      "avg_lat": 2.274700951576233
+    },
+    "always_strong": {
+      "passk": 1.0,
+      "paid_frac": 1.0,
+      "cost": 0.009237,
+      "avg_lat": 2.1521329641342164
+    },
+    "random": {
+      "passk": 0.85,
+      "paid_frac": 0.35,
+      "cost": 0.0030159999999999996,
+      "avg_lat": 2.3055394649505616
+    },
+    "router": {
+      "passk": 1.0,
+      "paid_frac": 0.6,
+      "cost": 0.007458,
+      "avg_lat": 2.6029692888259888
+    }
+  },
+  "records": [
+    {
+      "id": "add",
+      "difficulty": "easy",
+      "x": 0.22499999999999998,
+      "router": {
+        "tier": "weak",
+        "passed": true,
+        "cost": 0.0,
+        "latency": 0.7100417613983154,
+        "paid": false
+      },
+      "random_strong": false
+    },
+    {
+      "id": "reverse",
+      "difficulty": "easy",
+      "x": 0.11666666666666667,
+      "router": {
+        "tier": "weak",
+        "passed": true,
+        "cost": 0.0,
+        "latency": 0.6546502113342285,
+        "paid": false
+      },
+      "random_strong": false
+    },
+    {
+      "id": "is_even",
+      "difficulty": "easy",
+      "x": 0.11833333333333333,
+      "router": {
+        "tier": "weak",
+        "passed": true,
+        "cost": 0.0,
+        "latency": 0.7286679744720459,
+        "paid": false
+      },
+      "random_strong": true
+    },
+    {
+      "id": "count_vowels",
+      "difficulty": "easy",
+      "x": 0.18833333333333332,
+      "router": {
+        "tier": "weak",
+        "passed": true,
+        "cost": 0.0,
+        "latency": 0.9089789390563965,
+        "paid": false
+      },
+      "random_strong": true
+    },
+    {
+      "id": "fib",
+      "difficulty": "medium",
+      "x": 0.2783333333333333,
+      "router": {
+        "tier": "weak",
+        "passed": true,
+        "cost": 0.0,
+        "latency": 1.0320289134979248,
+        "paid": false
+      },
+      "random_strong": false
+    },
+    {
+      "id": "is_prime",
+      "difficulty": "medium",
+      "x": 0.25666666666666665,
+      "router": {
+        "tier": "weak",
+        "passed": true,
+        "cost": 0.0,
+        "latency": 1.4036891460418701,
+        "paid": false
+      },
+      "random_strong": true
+    },
+    {
+      "id": "two_sum",
+      "difficulty": "medium",
+      "x": 0.37333333333333335,
+      "router": {
+        "tier": "weak",
+        "passed": true,
+        "cost": 0.0,
+        "latency": 1.6546580791473389,
+        "paid": false
+      },
+      "random_strong": false
+    },
+    {
+      "id": "valid_parens",
+      "difficulty": "medium",
+      "x": 0.4583333333333333,
+      "router": {
+        "tier": "strong",
+        "passed": true,
+        "cost": 0.00035499999999999996,
+        "latency": 1.9787960052490234,
+        "paid": true
+      },
+      "random_strong": true
+    },
+    {
+      "id": "lcs",
+      "difficulty": "hard",
+      "x": 1.0,
+      "router": {
+        "tier": "strong",
+        "passed": true,
+        "cost": 0.000483,
+        "latency": 1.9733948707580566,
+        "paid": true
+      },
+      "random_strong": true
+    },
+    {
+      "id": "merge_intervals",
+      "difficulty": "hard",
+      "x": 0.7383333333333333,
+      "router": {
+        "tier": "strong",
+        "passed": true,
+        "cost": 0.0005,
+        "latency": 2.008805274963379,
+        "paid": true
+      },
+      "random_strong": false
+    },
+    {
+      "id": "word_break",
+      "difficulty": "hard",
+      "x": 1.0,
+      "router": {
+        "tier": "strong",
+        "passed": true,
+        "cost": 0.000359,
+        "latency": 1.9166638851165771,
+        "paid": true
+      },
+      "random_strong": false
+    },
+    {
+      "id": "edit_distance",
+      "difficulty": "hard",
+      "x": 1.0,
+      "router": {
+        "tier": "strong",
+        "passed": true,
+        "cost": 0.0007199999999999999,
+        "latency": 4.122673034667969,
+        "paid": true
+      },
+      "random_strong": false
+    },
+    {
+      "id": "min_window",
+      "difficulty": "expert",
+      "x": 0.35833333333333334,
+      "router": {
+        "tier": "strong(esc)",
+        "passed": true,
+        "cost": 0.001002,
+        "latency": 6.492562294006348,
+        "paid": true
+      },
+      "random_strong": true
+    },
+    {
+      "id": "calculator",
+      "difficulty": "expert",
+      "x": 0.4,
+      "router": {
+        "tier": "strong(esc)",
+        "passed": true,
+        "cost": 0.000715,
+        "latency": 6.994976043701172,
+        "paid": true
+      },
+      "random_strong": false
+    },
+    {
+      "id": "course_schedule",
+      "difficulty": "expert",
+      "x": 0.75,
+      "router": {
+        "tier": "strong",
+        "passed": true,
+        "cost": 0.000704,
+        "latency": 2.3007218837738037,
+        "paid": true
+      },
+      "random_strong": false
+    },
+    {
+      "id": "coin_change",
+      "difficulty": "expert",
+      "x": 0.705,
+      "router": {
+        "tier": "strong",
+        "passed": true,
+        "cost": 0.000541,
+        "latency": 1.9670259952545166,
+        "paid": true
+      },
+      "random_strong": true
+    },
+    {
+      "id": "trap_rain",
+      "difficulty": "expert",
+      "x": 0.34,
+      "router": {
+        "tier": "strong(esc)",
+        "passed": true,
+        "cost": 0.000526,
+        "latency": 5.504839181900024,
+        "paid": true
+      },
+      "random_strong": false
+    },
+    {
+      "id": "lru_cache",
+      "difficulty": "expert",
+      "x": 0.4,
+      "router": {
+        "tier": "strong(esc)",
+        "passed": true,
+        "cost": 0.000972,
+        "latency": 4.969272136688232,
+        "paid": true
+      },
+      "random_strong": false
+    },
+    {
+      "id": "word_ladder",
+      "difficulty": "expert",
+      "x": 0.52,
+      "router": {
+        "tier": "strong",
+        "passed": true,
+        "cost": 0.000581,
+        "latency": 2.211944103240967,
+        "paid": true
+      },
+      "random_strong": false
+    },
+    {
+      "id": "max_subarray_product",
+      "difficulty": "expert",
+      "x": 0.31666666666666665,
+      "router": {
+        "tier": "weak",
+        "passed": true,
+        "cost": 0.0,
+        "latency": 2.524996042251587,
+        "paid": false
+      },
+      "random_strong": false
+    }
+  ]
+}

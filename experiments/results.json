@@ -1,0 +1,116 @@
+{
+  "config": {
+    "weak": "llama3.2:latest",
+    "strong": "qwen3:latest",
+    "tau": 0.35,
+    "limit": 6,
+    "seed": 0,
+    "out": "results.json"
+  },
+  "results": {
+    "always_weak": {
+      "passk": 1.0,
+      "paid_frac": 0.0,
+      "cost": 0.0,
+      "avg_lat": 1.0993818839391072
+    },
+    "always_strong": {
+      "passk": 1.0,
+      "paid_frac": 1.0,
+      "cost": 0.021231,
+      "avg_lat": 52.55207618077596
+    },
+    "random": {
+      "passk": 1.0,
+      "paid_frac": 0.5,
+      "cost": 0.014155999999999998,
+      "avg_lat": 35.812299172083534
+    },
+    "router": {
+      "passk": 1.0,
+      "paid_frac": 0.0,
+      "cost": 0.0,
+      "avg_lat": 1.0993818839391072
+    }
+  },
+  "records": [
+    {
+      "id": "add",
+      "difficulty": "easy",
+      "x": 0.22499999999999998,
+      "router": {
+        "tier": "weak",
+        "passed": true,
+        "cost": 0.0,
+        "latency": 1.6938271522521973,
+        "paid": false
+      },
+      "random_strong": false
+    },
+    {
+      "id": "reverse",
+      "difficulty": "easy",
+      "x": 0.11666666666666667,
+      "router": {
+        "tier": "weak",
+        "passed": true,
+        "cost": 0.0,
+        "latency": 0.7269241809844971,
+        "paid": false
+      },
+      "random_strong": false
+    },
+    {
+      "id": "is_even",
+      "difficulty": "easy",
+      "x": 0.11833333333333333,
+      "router": {
+        "tier": "weak",
+        "passed": true,
+        "cost": 0.0,
+        "latency": 0.7353091239929199,
+        "paid": false
+      },
+      "random_strong": true
+    },
+    {
+      "id": "count_vowels",
+      "difficulty": "easy",
+      "x": 0.18833333333333332,
+      "router": {
+        "tier": "weak",
+        "passed": true,
+        "cost": 0.0,
+        "latency": 0.9231669902801514,
+        "paid": false
+      },
+      "random_strong": true
+    },
+    {
+      "id": "fib",
+      "difficulty": "medium",
+      "x": 0.2783333333333333,
+      "router": {
+        "tier": "weak",
+        "passed": true,
+        "cost": 0.0,
+        "latency": 1.0478718280792236,
+        "paid": false
+      },
+      "random_strong": false
+    },
+    {
+      "id": "is_prime",
+      "difficulty": "medium",
+      "x": 0.25666666666666665,
+      "router": {
+        "tier": "weak",
+        "passed": true,
+        "cost": 0.0,
+        "latency": 1.4691920280456543,
+        "paid": false
+      },
+      "random_strong": true
+    }
+  ]
+}

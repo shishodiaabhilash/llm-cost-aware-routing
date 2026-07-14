@@ -1,0 +1,662 @@
+{
+  "llama3.2:latest": {
+    "cls": "small local free",
+    "overall": 0.4166666666666667,
+    "by": {
+      "easy": null,
+      "medium": null,
+      "hard": null,
+      "expert": null,
+      "brutal": 0.4166666666666667
+    },
+    "avg_latency": 3.009318192799886,
+    "rows": [
+      {
+        "id": "regex_match",
+        "difficulty": "brutal",
+        "passed": false,
+        "latency": 5.69156813621521,
+        "in_tok": 96,
+        "out_tok": 178
+      },
+      {
+        "id": "longest_valid_parens",
+        "difficulty": "brutal",
+        "passed": false,
+        "latency": 1.8031458854675293,
+        "in_tok": 90,
+        "out_tok": 83
+      },
+      {
+        "id": "largest_rectangle",
+        "difficulty": "brutal",
+        "passed": false,
+        "latency": 3.4415931701660156,
+        "in_tok": 94,
+        "out_tok": 173
+      },
+      {
+        "id": "min_jumps",
+        "difficulty": "brutal",
+        "passed": false,
+        "latency": 2.9399847984313965,
+        "in_tok": 95,
+        "out_tok": 146
+      },
+      {
+        "id": "candy",
+        "difficulty": "brutal",
+        "passed": true,
+        "latency": 2.5326521396636963,
+        "in_tok": 99,
+        "out_tok": 123
+      },
+      {
+        "id": "sliding_window_max",
+        "difficulty": "brutal",
+        "passed": true,
+        "latency": 2.2369160652160645,
+        "in_tok": 95,
+        "out_tok": 107
+      },
+      {
+        "id": "n_queens",
+        "difficulty": "brutal",
+        "passed": true,
+        "latency": 3.3260531425476074,
+        "in_tok": 95,
+        "out_tok": 167
+      },
+      {
+        "id": "calc_paren",
+        "difficulty": "brutal",
+        "passed": false,
+        "latency": 3.857398748397827,
+        "in_tok": 105,
+        "out_tok": 196
+      },
+      {
+        "id": "lis",
+        "difficulty": "brutal",
+        "passed": true,
+        "latency": 1.8460159301757812,
+        "in_tok": 86,
+        "out_tok": 81
+      },
+      {
+        "id": "burst_balloons",
+        "difficulty": "brutal",
+        "passed": false,
+        "latency": 2.5602471828460693,
+        "in_tok": 103,
+        "out_tok": 125
+      },
+      {
+        "id": "decode_string",
+        "difficulty": "brutal",
+        "passed": false,
+        "latency": 2.5899341106414795,
+        "in_tok": 99,
+        "out_tok": 127
+      },
+      {
+        "id": "partition_equal",
+        "difficulty": "brutal",
+        "passed": true,
+        "latency": 3.286309003829956,
+        "in_tok": 88,
+        "out_tok": 168
+      }
+    ]
+  },
+  "gemma3:latest": {
+    "cls": "small local free",
+    "overall": 0.8333333333333334,
+    "by": {
+      "easy": null,
+      "medium": null,
+      "hard": null,
+      "expert": null,
+      "brutal": 0.8333333333333334
+    },
+    "avg_latency": 7.273763994375865,
+    "rows": [
+      {
+        "id": "regex_match",
+        "difficulty": "brutal",
+        "passed": true,
+        "latency": 13.728890895843506,
+        "in_tok": 89,
+        "out_tok": 442
+      },
+      {
+        "id": "longest_valid_parens",
+        "difficulty": "brutal",
+        "passed": true,
+        "latency": 5.039348840713501,
+        "in_tok": 79,
+        "out_tok": 193
+      },
+      {
+        "id": "largest_rectangle",
+        "difficulty": "brutal",
+        "passed": true,
+        "latency": 5.597350120544434,
+        "in_tok": 82,
+        "out_tok": 215
+      },
+      {
+        "id": "min_jumps",
+        "difficulty": "brutal",
+        "passed": true,
+        "latency": 4.683781862258911,
+        "in_tok": 85,
+        "out_tok": 179
+      },
+      {
+        "id": "candy",
+        "difficulty": "brutal",
+        "passed": true,
+        "latency": 6.0309741497039795,
+        "in_tok": 84,
+        "out_tok": 237
+      },
+      {
+        "id": "sliding_window_max",
+        "difficulty": "brutal",
+        "passed": true,
+        "latency": 7.271557807922363,
+        "in_tok": 84,
+        "out_tok": 289
+      },
+      {
+        "id": "n_queens",
+        "difficulty": "brutal",
+        "passed": true,
+        "latency": 9.680778980255127,
+        "in_tok": 83,
+        "out_tok": 388
+      },
+      {
+        "id": "calc_paren",
+        "difficulty": "brutal",
+        "passed": false,
+        "latency": 12.58387303352356,
+        "in_tok": 94,
+        "out_tok": 505
+      },
+      {
+        "id": "lis",
+        "difficulty": "brutal",
+        "passed": true,
+        "latency": 5.244909048080444,
+        "in_tok": 75,
+        "out_tok": 198
+      },
+      {
+        "id": "burst_balloons",
+        "difficulty": "brutal",
+        "passed": false,
+        "latency": 5.3790271282196045,
+        "in_tok": 94,
+        "out_tok": 208
+      },
+      {
+        "id": "decode_string",
+        "difficulty": "brutal",
+        "passed": true,
+        "latency": 5.54142689704895,
+        "in_tok": 90,
+        "out_tok": 215
+      },
+      {
+        "id": "partition_equal",
+        "difficulty": "brutal",
+        "passed": true,
+        "latency": 6.503249168395996,
+        "in_tok": 77,
+        "out_tok": 255
+      }
+    ]
+  },
+  "phi4-mini:latest": {
+    "cls": "small local free",
+    "overall": 0.16666666666666666,
+    "by": {
+      "easy": null,
+      "medium": null,
+      "hard": null,
+      "expert": null,
+      "brutal": 0.16666666666666666
+    },
+    "avg_latency": 4.49612832069397,
+    "rows": [
+      {
+        "id": "regex_match",
+        "difficulty": "brutal",
+        "passed": true,
+        "latency": 6.399737119674683,
+        "in_tok": 74,
+        "out_tok": 159
+      },
+      {
+        "id": "longest_valid_parens",
+        "difficulty": "brutal",
+        "passed": false,
+        "latency": 3.860278844833374,
+        "in_tok": 67,
+        "out_tok": 160
+      },
+      {
+        "id": "largest_rectangle",
+        "difficulty": "brutal",
+        "passed": false,
+        "latency": 4.867516279220581,
+        "in_tok": 72,
+        "out_tok": 202
+      },
+      {
+        "id": "min_jumps",
+        "difficulty": "brutal",
+        "passed": true,
+        "latency": 2.839226007461548,
+        "in_tok": 73,
+        "out_tok": 112
+      },
+      {
+        "id": "candy",
+        "difficulty": "brutal",
+        "passed": false,
+        "latency": 3.448378801345825,
+        "in_tok": 77,
+        "out_tok": 139
+      },
+      {
+        "id": "sliding_window_max",
+        "difficulty": "brutal",
+        "passed": false,
+        "latency": 3.739577054977417,
+        "in_tok": 73,
+        "out_tok": 152
+      },
+      {
+        "id": "n_queens",
+        "difficulty": "brutal",
+        "passed": false,
+        "latency": 5.48302698135376,
+        "in_tok": 74,
+        "out_tok": 229
+      },
+      {
+        "id": "calc_paren",
+        "difficulty": "brutal",
+        "passed": false,
+        "latency": 5.906387090682983,
+        "in_tok": 83,
+        "out_tok": 248
+      },
+      {
+        "id": "lis",
+        "difficulty": "brutal",
+        "passed": false,
+        "latency": 4.038129806518555,
+        "in_tok": 64,
+        "out_tok": 168
+      },
+      {
+        "id": "burst_balloons",
+        "difficulty": "brutal",
+        "passed": false,
+        "latency": 5.791457891464233,
+        "in_tok": 80,
+        "out_tok": 243
+      },
+      {
+        "id": "decode_string",
+        "difficulty": "brutal",
+        "passed": false,
+        "latency": 3.8737359046936035,
+        "in_tok": 77,
+        "out_tok": 158
+      },
+      {
+        "id": "partition_equal",
+        "difficulty": "brutal",
+        "passed": false,
+        "latency": 3.706088066101074,
+        "in_tok": 66,
+        "out_tok": 153
+      }
+    ]
+  },
+  "mistral:latest": {
+    "cls": "small local free",
+    "overall": 0.4166666666666667,
+    "by": {
+      "easy": null,
+      "medium": null,
+      "hard": null,
+      "expert": null,
+      "brutal": 0.4166666666666667
+    },
+    "avg_latency": 19.1414741675059,
+    "rows": [
+      {
+        "id": "regex_match",
+        "difficulty": "brutal",
+        "passed": true,
+        "latency": 15.996893882751465,
+        "in_tok": 92,
+        "out_tok": 360
+      },
+      {
+        "id": "longest_valid_parens",
+        "difficulty": "brutal",
+        "passed": false,
+        "latency": 12.485673904418945,
+        "in_tok": 83,
+        "out_tok": 319
+      },
+      {
+        "id": "largest_rectangle",
+        "difficulty": "brutal",
+        "passed": false,
+        "latency": 15.874214887619019,
+        "in_tok": 87,
+        "out_tok": 408
+      },
+      {
+        "id": "min_jumps",
+        "difficulty": "brutal",
+        "passed": false,
+        "latency": 20.66092014312744,
+        "in_tok": 88,
+        "out_tok": 533
+      },
+      {
+        "id": "candy",
+        "difficulty": "brutal",
+        "passed": true,
+        "latency": 11.437523126602173,
+        "in_tok": 89,
+        "out_tok": 291
+      },
+      {
+        "id": "sliding_window_max",
+        "difficulty": "brutal",
+        "passed": false,
+        "latency": 9.76346206665039,
+        "in_tok": 91,
+        "out_tok": 247
+      },
+      {
+        "id": "n_queens",
+        "difficulty": "brutal",
+        "passed": true,
+        "latency": 11.40544319152832,
+        "in_tok": 86,
+        "out_tok": 290
+      },
+      {
+        "id": "calc_paren",
+        "difficulty": "brutal",
+        "passed": false,
+        "latency": 18.4546377658844,
+        "in_tok": 105,
+        "out_tok": 472
+      },
+      {
+        "id": "lis",
+        "difficulty": "brutal",
+        "passed": true,
+        "latency": 9.29538083076477,
+        "in_tok": 80,
+        "out_tok": 235
+      },
+      {
+        "id": "burst_balloons",
+        "difficulty": "brutal",
+        "passed": false,
+        "latency": 32.194555044174194,
+        "in_tok": 104,
+        "out_tok": 240
+      },
+      {
+        "id": "decode_string",
+        "difficulty": "brutal",
+        "passed": false,
+        "latency": 29.071506023406982,
+        "in_tok": 91,
+        "out_tok": 177
+      },
+      {
+        "id": "partition_equal",
+        "difficulty": "brutal",
+        "passed": true,
+        "latency": 43.0574791431427,
+        "in_tok": 79,
+        "out_tok": 267
+      }
+    ]
+  },
+  "gpt-oss:120b-cloud": {
+    "cls": "large cloud",
+    "overall": 1.0,
+    "by": {
+      "easy": null,
+      "medium": null,
+      "hard": null,
+      "expert": null,
+      "brutal": 1.0
+    },
+    "avg_latency": 6.479044795036316,
+    "rows": [
+      {
+        "id": "regex_match",
+        "difficulty": "brutal",
+        "passed": true,
+        "latency": 8.872096061706543,
+        "in_tok": 138,
+        "out_tok": 702
+      },
+      {
+        "id": "longest_valid_parens",
+        "difficulty": "brutal",
+        "passed": true,
+        "latency": 8.199575901031494,
+        "in_tok": 131,
+        "out_tok": 508
+      },
+      {
+        "id": "largest_rectangle",
+        "difficulty": "brutal",
+        "passed": true,
+        "latency": 4.368125915527344,
+        "in_tok": 136,
+        "out_tok": 306
+      },
+      {
+        "id": "min_jumps",
+        "difficulty": "brutal",
+        "passed": true,
+        "latency": 5.448375940322876,
+        "in_tok": 137,
+        "out_tok": 300
+      },
+      {
+        "id": "candy",
+        "difficulty": "brutal",
+        "passed": true,
+        "latency": 6.195197820663452,
+        "in_tok": 141,
+        "out_tok": 366
+      },
+      {
+        "id": "sliding_window_max",
+        "difficulty": "brutal",
+        "passed": true,
+        "latency": 3.8056910037994385,
+        "in_tok": 137,
+        "out_tok": 263
+      },
+      {
+        "id": "n_queens",
+        "difficulty": "brutal",
+        "passed": true,
+        "latency": 6.683012962341309,
+        "in_tok": 138,
+        "out_tok": 442
+      },
+      {
+        "id": "calc_paren",
+        "difficulty": "brutal",
+        "passed": true,
+        "latency": 6.796877861022949,
+        "in_tok": 147,
+        "out_tok": 535
+      },
+      {
+        "id": "lis",
+        "difficulty": "brutal",
+        "passed": true,
+        "latency": 4.541071176528931,
+        "in_tok": 128,
+        "out_tok": 274
+      },
+      {
+        "id": "burst_balloons",
+        "difficulty": "brutal",
+        "passed": true,
+        "latency": 8.41602873802185,
+        "in_tok": 144,
+        "out_tok": 511
+      },
+      {
+        "id": "decode_string",
+        "difficulty": "brutal",
+        "passed": true,
+        "latency": 7.527976989746094,
+        "in_tok": 141,
+        "out_tok": 562
+      },
+      {
+        "id": "partition_equal",
+        "difficulty": "brutal",
+        "passed": true,
+        "latency": 6.894507169723511,
+        "in_tok": 130,
+        "out_tok": 297
+      }
+    ]
+  },
+  "qwen3-coder:480b-cloud": {
+    "cls": "large cloud",
+    "overall": 0.9166666666666666,
+    "by": {
+      "easy": null,
+      "medium": null,
+      "hard": null,
+      "expert": null,
+      "brutal": 0.9166666666666666
+    },
+    "avg_latency": 2.6957815885543823,
+    "rows": [
+      {
+        "id": "regex_match",
+        "difficulty": "brutal",
+        "passed": true,
+        "latency": 7.925581216812134,
+        "in_tok": 79,
+        "out_tok": 297
+      },
+      {
+        "id": "longest_valid_parens",
+        "difficulty": "brutal",
+        "passed": true,
+        "latency": 2.253131151199341,
+        "in_tok": 73,
+        "out_tok": 238
+      },
+      {
+        "id": "largest_rectangle",
+        "difficulty": "brutal",
+        "passed": true,
+        "latency": 2.282153844833374,
+        "in_tok": 77,
+        "out_tok": 119
+      },
+      {
+        "id": "min_jumps",
+        "difficulty": "brutal",
+        "passed": true,
+        "latency": 2.279526948928833,
+        "in_tok": 78,
+        "out_tok": 111
+      },
+      {
+        "id": "candy",
+        "difficulty": "brutal",
+        "passed": true,
+        "latency": 2.0299508571624756,
+        "in_tok": 82,
+        "out_tok": 181
+      },
+      {
+        "id": "sliding_window_max",
+        "difficulty": "brutal",
+        "passed": true,
+        "latency": 2.3971731662750244,
+        "in_tok": 78,
+        "out_tok": 210
+      },
+      {
+        "id": "n_queens",
+        "difficulty": "brutal",
+        "passed": true,
+        "latency": 1.9407269954681396,
+        "in_tok": 78,
+        "out_tok": 169
+      },
+      {
+        "id": "calc_paren",
+        "difficulty": "brutal",
+        "passed": false,
+        "latency": 2.5653038024902344,
+        "in_tok": 89,
+        "out_tok": 240
+      },
+      {
+        "id": "lis",
+        "difficulty": "brutal",
+        "passed": true,
+        "latency": 2.2591090202331543,
+        "in_tok": 69,
+        "out_tok": 187
+      },
+      {
+        "id": "burst_balloons",
+        "difficulty": "brutal",
+        "passed": true,
+        "latency": 2.4756269454956055,
+        "in_tok": 86,
+        "out_tok": 292
+      },
+      {
+        "id": "decode_string",
+        "difficulty": "brutal",
+        "passed": true,
+        "latency": 1.9728901386260986,
+        "in_tok": 82,
+        "out_tok": 121
+      },
+      {
+        "id": "partition_equal",
+        "difficulty": "brutal",
+        "passed": true,
+        "latency": 1.9682049751281738,
+        "in_tok": 71,
+        "out_tok": 152
+      }
+    ]
+  }
+}

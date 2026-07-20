@@ -41,6 +41,9 @@ class Config:
 
     # --- observability -------------------------------------------------------
     log_decisions: bool = True     # print one line per routing decision
+    decisions_log: str = ""        # JSONL path; "" -> ~/.llmroute/decisions.jsonl
+    est_large_cost: float = 0.03   # illustrative $/request for the large tier
+    cors: bool = True              # allow browser/webview clients to read stats
 
     # --- complexity heuristic keywords --------------------------------------
     hard_keywords: List[str] = field(default_factory=lambda: [
@@ -56,6 +59,12 @@ class Config:
 
     def to_json(self) -> str:
         return json.dumps(asdict(self), indent=2)
+
+    def decisions_path(self) -> str:
+        """Resolve the JSONL decisions log path (creating the dir if needed)."""
+        p = self.decisions_log or os.path.expanduser("~/.llmroute/decisions.jsonl")
+        os.makedirs(os.path.dirname(p), exist_ok=True)
+        return p
 
 
 def load_config(path: str | None = None) -> Config:

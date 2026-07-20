@@ -5,6 +5,8 @@ Endpoints:
     GET  /v1/models                  -> OpenAI-style model list
     POST /v1/chat/completions        -> routes to an Ollama model and returns an
                                         OpenAI-style completion (stream or not)
+    GET  /stats                      -> aggregate routing stats (for dashboards)
+    GET  /decisions?n=50             -> recent routing decisions
 
 The ``api_key`` sent by clients is ignored (there is no OpenAI account
 involved -- "OpenAI-compatible" refers only to the request/response format).
@@ -13,13 +15,69 @@ involved -- "OpenAI-compatible" refers only to the request/response format).
 from __future__ import annotations
 
 import json
+import threading
 import time
 import uuid
+from collections import deque
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from .config import Config
 from .engine import Router
 from . import ollama_client as oc
+
+
+# ------------------------------------------------------------------ stats state
+_LOCK = threading.Lock()
+_RECENT = deque(maxlen=300)
+_STATS = {
+    "total": 0, "small": 0, "large": 0, "escalated": 0, "fallback": 0,
+    "errors": 0, "in_tokens": 0, "out_tokens": 0,
+    "est_saved": 0.0, "est_spent": 0.0, "started": time.time(),
+}
+
+
+def _record(cfg: Config, result):
+    is_large = result.tier == "large"
+    entry = {
+        "ts": time.time(),
+        "complexity": round(result.complexity, 3),
+        "tier": result.tier,
+        "model": result.model,
+        "escalated": result.escalated,
+        "in_tokens": result.in_tokens,
+        "out_tokens": result.out_tokens,
+        "latency": round(result.latency, 2),
+    }
+    with _LOCK:
+        _STATS["total"] += 1
+        _STATS["in_tokens"] += result.in_tokens
+        _STATS["out_tokens"] += result.out_tokens
+        if is_large:
+            _STATS["large"] += 1
+            _STATS["est_spent"] += cfg.est_large_cost
+        else:
+            _STATS["small"] += 1
+            _STATS["est_saved"] += cfg.est_large_cost  # avoided the large tier
+        if result.escalated:
+            _STATS["escalated"] += 1
+        if "fallback" in result.tier:
+            _STATS["fallback"] += 1
+        _RECENT.appendleft(entry)
+    try:
+        with open(cfg.decisions_path(), "a") as f:
+            f.write(json.dumps(entry) + "\n")
+    except Exception:  # noqa: BLE001
+        pass
+
+
+def _snapshot():
+    with _LOCK:
+        s = dict(_STATS)
+        recent = list(_RECENT)
+    total = s["total"] or 1
+    s["pct_local"] = round(100.0 * s["small"] / total, 1)
+    s["uptime_s"] = round(time.time() - s["started"], 1)
+    return s, recent
 
 
 def _chunk_text(text: str, size: int = 24):
@@ -31,16 +89,22 @@ class Handler(BaseHTTPRequestHandler):
     router: Router = None          # injected in serve()
     config: Config = None
 
-    # silence default noisy logging; we do our own
     def log_message(self, fmt, *args):
         return
 
     # ----------------------------------------------------------------- helpers
+    def _cors(self):
+        if self.config.cors:
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Access-Control-Allow-Headers", "*")
+            self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+
     def _json(self, code: int, obj: dict, extra_headers: dict = None):
         body = json.dumps(obj).encode()
         self.send_response(code)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(body)))
+        self._cors()
         for k, v in (extra_headers or {}).items():
             self.send_header(k, v)
         self.end_headers()
@@ -51,11 +115,33 @@ class Handler(BaseHTTPRequestHandler):
         raw = self.rfile.read(length) if length else b"{}"
         return json.loads(raw or b"{}")
 
+    # ------------------------------------------------------------------ OPTIONS
+    def do_OPTIONS(self):
+        self.send_response(204)
+        self._cors()
+        self.end_headers()
+
     # --------------------------------------------------------------------- GET
     def do_GET(self):
-        if self.path.rstrip("/") == "/health":
+        path = self.path.split("?", 1)[0].rstrip("/")
+        if path == "/health":
             return self._json(200, {"status": "ok", "service": "llmroute"})
-        if self.path.startswith("/v1/models"):
+        if path == "/stats":
+            s, _ = _snapshot()
+            s["small_model"] = self.config.small_model
+            s["large_model"] = self.config.large_model
+            s["tau"] = self.config.tau
+            s["reactive"] = self.config.reactive
+            return self._json(200, s)
+        if path == "/decisions":
+            n = 50
+            if "?" in self.path:
+                from urllib.parse import parse_qs, urlparse
+                q = parse_qs(urlparse(self.path).query)
+                n = int(q.get("n", [50])[0])
+            _, recent = _snapshot()
+            return self._json(200, {"decisions": recent[:n]})
+        if path == "/v1/models":
             models = ["auto", self.config.small_model, self.config.large_model]
             data = [{"id": m, "object": "model", "owned_by": "llmroute"}
                     for m in dict.fromkeys(models)]
@@ -80,15 +166,19 @@ class Handler(BaseHTTPRequestHandler):
             if model_field == self.config.trigger_model:
                 result = self.router.route(messages, temperature)
             else:
-                # explicit model -> pass straight through to Ollama
                 result = self.router.passthrough(model_field, messages,
                                                  temperature)
         except oc.OllamaError as e:
+            with _LOCK:
+                _STATS["errors"] += 1
             return self._json(502, {"error": {
                 "message": str(e), "type": "ollama_error"}})
         except Exception as e:  # noqa: BLE001
+            with _LOCK:
+                _STATS["errors"] += 1
             return self._json(500, {"error": {"message": str(e)}})
 
+        _record(self.config, result)
         if self.config.log_decisions:
             print(f"[llmroute] x={result.complexity:.2f} tier={result.tier} "
                   f"model={result.model} escalated={result.escalated} "
@@ -131,6 +221,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", "text/event-stream")
         self.send_header("Cache-Control", "no-cache")
         self.send_header("Connection", "keep-alive")
+        self._cors()
         for k, v in route_headers.items():
             self.send_header(k, v)
         self.end_headers()
@@ -141,11 +232,12 @@ class Handler(BaseHTTPRequestHandler):
                 "created": created, "model": result.model,
                 "choices": [{"index": 0, "delta": delta,
                              "finish_reason": finish}],
+                "x_llmroute": {"tier": result.tier,
+                               "escalated": result.escalated},
             }
             self.wfile.write(f"data: {json.dumps(obj)}\n\n".encode())
             self.wfile.flush()
 
-        # role first, then the (already-decided) final answer in pieces
         send({"role": "assistant"})
         for piece in _chunk_text(result.text):
             send({"content": piece})
@@ -161,6 +253,8 @@ def serve(config: Config):
     print(f"llmroute gateway on http://{config.host}:{config.port}/v1  "
           f"(small={config.small_model}, large={config.large_model}, "
           f"tau={config.tau}, reactive={config.reactive})", flush=True)
+    print(f"stats: http://{config.host}:{config.port}/stats   "
+          f"log: {config.decisions_path()}", flush=True)
     print("Point any OpenAI-compatible client's base URL here. "
           "api_key is ignored.", flush=True)
     try:

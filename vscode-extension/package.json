@@ -44,6 +44,11 @@
           "default": "auto",
           "description": "Model to request. 'auto' lets the router decide the tier."
         },
+        "llmrouter.agentModel": {
+          "type": "string",
+          "default": "",
+          "description": "Model used for the agent loop. Empty = use the gateway's large tier (recommended for reliable tool use). 'auto' = let the router decide (cheaper, weaker at tool following). Or a specific model tag."
+        },
         "llmrouter.maxSteps": {
           "type": "number",
           "default": 6,

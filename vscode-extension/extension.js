@@ -7,6 +7,8 @@ const https = require("https");
 const cp = require("child_process");
 const path = require("path");
 
+let LARGE_MODEL = null; // learned from the gateway's /stats (agent uses it)
+
 // ------------------------------------------------------------------ helpers
 function cfg() {
   return vscode.workspace.getConfiguration("llmrouter");
@@ -17,23 +19,54 @@ function workspaceRoot() {
   return f && f.length ? f[0].uri.fsPath : process.cwd();
 }
 
-// Resolve a user/model-supplied relative path safely inside the workspace.
+// Which model the AGENT loop should use. Agentic tool-following needs a capable
+// model, so by default we use the gateway's large tier. Users can override:
+//   ""      -> use the large tier (default, reliable)
+//   "auto"  -> let the router decide (cheaper, weaker at tool following)
+//   "<tag>" -> a specific model
+function agentModel() {
+  const m = cfg().get("agentModel", "");
+  if (m === "auto") return "auto";
+  if (m) return m;
+  return LARGE_MODEL || "auto";
+}
+
+// Resolve a model-supplied path safely INSIDE the workspace. Model paths are
+// treated as relative: leading slashes / drive letters are stripped so common
+// hallucinations ("/src/x", "C:\\x") are normalised instead of rejected.
 function safeResolve(rel) {
   const root = workspaceRoot();
-  const abs = path.resolve(root, rel || ".");
+  let r = String(rel || ".").trim();
+  r = r.replace(/^([A-Za-z]:)?[\\/]+/, ""); // strip leading slash/drive
+  const abs = path.resolve(root, r);
   if (abs !== root && !abs.startsWith(root + path.sep)) {
     throw new Error("path escapes the workspace: " + rel);
   }
   return abs;
 }
 
-// POST to the gateway's /v1/chat/completions (non-streaming) -> {content, model, tier}
-function gatewayChat(messages) {
+async function listWorkspaceTop() {
+  try {
+    const items = await vscode.workspace.fs.readDirectory(
+      vscode.Uri.file(workspaceRoot())
+    );
+    return items
+      .filter(([n]) => n !== ".git")
+      .slice(0, 100)
+      .map(([n, t]) => (t === vscode.FileType.Directory ? n + "/" : n))
+      .join("\n");
+  } catch (_) {
+    return "(unavailable)";
+  }
+}
+
+// POST to the gateway's /v1/chat/completions (non-streaming).
+function gatewayChat(messages, model) {
   return new Promise((resolve, reject) => {
     const base = cfg().get("gatewayUrl", "http://localhost:11435");
     const url = new URL(base + "/v1/chat/completions");
     const payload = JSON.stringify({
-      model: cfg().get("model", "auto"),
+      model: model || cfg().get("model", "auto"),
       messages,
       stream: false,
       temperature: 0.2,
@@ -76,10 +109,9 @@ function gatewayChat(messages) {
 }
 
 // ------------------------------------------------------------------ tools
-// The model requests a tool by emitting a single JSON object. We parse leniently.
 function parseTool(text) {
-  // find the first {...} block that mentions "tool"
-  const matches = text.match(/\{[\s\S]*?\}/g);
+  const t = String(text).replace(/```(?:json)?/gi, "");
+  const matches = t.match(/\{[\s\S]*?\}/g);
   if (!matches) return null;
   for (const m of matches) {
     if (!/"tool"/.test(m)) continue;
@@ -93,128 +125,161 @@ function parseTool(text) {
   return null;
 }
 
-async function runTool(action, view) {
-  const auto = cfg().get("autoApproveReadTools", true);
-  switch (action.tool) {
-    case "read_file": {
-      const abs = safeResolve(action.path);
-      const buf = await vscode.workspace.fs.readFile(vscode.Uri.file(abs));
-      let txt = Buffer.from(buf).toString("utf8");
-      if (txt.length > 60000) txt = txt.slice(0, 60000) + "\n...[truncated]";
-      return txt;
-    }
-    case "list_dir": {
-      const abs = safeResolve(action.path || ".");
-      const items = await vscode.workspace.fs.readDirectory(
-        vscode.Uri.file(abs)
-      );
-      return items
-        .map(([n, t]) => (t === vscode.FileType.Directory ? n + "/" : n))
-        .join("\n");
-    }
-    case "edit_file": {
-      const abs = safeResolve(action.path);
-      const ok = await vscode.window.showWarningMessage(
-        `Assistant wants to write ${action.path}`,
-        { modal: true },
-        "Apply",
-        "Reject"
-      );
-      if (ok !== "Apply") return "USER REJECTED the edit.";
-      const enc = Buffer.from(action.content ?? "", "utf8");
-      await vscode.workspace.fs.writeFile(vscode.Uri.file(abs), enc);
-      const doc = await vscode.workspace.openTextDocument(
-        vscode.Uri.file(abs)
-      );
-      vscode.window.showTextDocument(doc, { preview: false });
-      return `Wrote ${action.path} (${enc.length} bytes).`;
-    }
-    case "run_command": {
-      const ok = await vscode.window.showWarningMessage(
-        `Assistant wants to run:\n\n${action.command}`,
-        { modal: true },
-        "Run",
-        "Reject"
-      );
-      if (ok !== "Run") return "USER REJECTED the command.";
-      return await new Promise((resolve) => {
-        cp.exec(
-          action.command,
-          { cwd: workspaceRoot(), timeout: 60000, maxBuffer: 1024 * 1024 },
-          (err, stdout, stderr) => {
-            const out = (stdout || "") + (stderr || "");
-            resolve(
-              (err ? `[exit ${err.code}]\n` : "") +
-                (out.slice(0, 8000) || "(no output)")
-            );
-          }
+async function runTool(action) {
+  try {
+    switch (action.tool) {
+      case "read_file": {
+        const abs = safeResolve(action.path);
+        const buf = await vscode.workspace.fs.readFile(vscode.Uri.file(abs));
+        let txt = Buffer.from(buf).toString("utf8");
+        if (txt.length > 60000) txt = txt.slice(0, 60000) + "\n...[truncated]";
+        return txt;
+      }
+      case "list_dir": {
+        const abs = safeResolve(action.path || ".");
+        const items = await vscode.workspace.fs.readDirectory(
+          vscode.Uri.file(abs)
         );
-      });
+        return (
+          items
+            .map(([n, t]) => (t === vscode.FileType.Directory ? n + "/" : n))
+            .join("\n") || "(empty)"
+        );
+      }
+      case "edit_file": {
+        const abs = safeResolve(action.path);
+        const ok = await vscode.window.showWarningMessage(
+          `Assistant wants to write ${action.path}`,
+          { modal: true },
+          "Apply",
+          "Reject"
+        );
+        if (ok !== "Apply") return "USER REJECTED the edit.";
+        const enc = Buffer.from(action.content ?? "", "utf8");
+        await vscode.workspace.fs.writeFile(vscode.Uri.file(abs), enc);
+        const doc = await vscode.workspace.openTextDocument(
+          vscode.Uri.file(abs)
+        );
+        vscode.window.showTextDocument(doc, { preview: false });
+        return `Wrote ${action.path} (${enc.length} bytes).`;
+      }
+      case "run_command": {
+        const ok = await vscode.window.showWarningMessage(
+          `Assistant wants to run:\n\n${action.command}`,
+          { modal: true },
+          "Run",
+          "Reject"
+        );
+        if (ok !== "Run") return "USER REJECTED the command.";
+        return await new Promise((resolve) => {
+          cp.exec(
+            action.command,
+            { cwd: workspaceRoot(), timeout: 60000, maxBuffer: 1024 * 1024 },
+            (err, stdout, stderr) => {
+              const out = (stdout || "") + (stderr || "");
+              resolve(
+                (err ? `[exit ${err.code}]\n` : "") +
+                  (out.slice(0, 8000) || "(no output)")
+              );
+            }
+          );
+        });
+      }
+      default:
+        return "Unknown tool: " + action.tool;
     }
-    default:
-      return "Unknown tool: " + action.tool;
+  } catch (e) {
+    const msg = String(e.message || e);
+    if (/escapes the workspace|ENOENT|not found|EISDIR|no such/i.test(msg)) {
+      const top = await listWorkspaceTop();
+      return (
+        `ERROR: ${msg}. Use a path RELATIVE to the workspace root ` +
+        `(e.g. "experiments/tasks.py"). Top-level entries:\n${top}`
+      );
+    }
+    return "TOOL ERROR: " + msg;
   }
 }
 
-// ------------------------------------------------------------------ context
-function contextBlock() {
+// ------------------------------------------------------------------ prompt
+async function buildSystemPrompt() {
+  const top = await listWorkspaceTop();
   const ed = vscode.window.activeTextEditor;
-  const root = workspaceRoot();
-  let s = `Workspace root: ${root}`;
+  let ctx = `Top-level entries in the workspace (relative to the root):\n${top}`;
   if (ed) {
-    const rel = path.relative(root, ed.document.uri.fsPath);
-    s += `\nActive file: ${rel} (${ed.document.languageId})`;
+    const rel = path.relative(workspaceRoot(), ed.document.uri.fsPath);
+    ctx += `\n\nActive file (relative path): ${rel} (${ed.document.languageId})`;
     const sel = ed.document.getText(ed.selection);
     if (sel && sel.trim())
-      s += `\nSelected text:\n\`\`\`\n${sel.slice(0, 4000)}\n\`\`\``;
+      ctx += `\nSelected text:\n\`\`\`\n${sel.slice(0, 4000)}\n\`\`\``;
   }
-  return s;
-}
-
-function systemPrompt() {
   return [
     "You are LLM Router Assistant, an agentic AI coding assistant embedded in",
-    "VS Code. You help with reading, writing, and running code in the user's",
-    "workspace.",
+    "VS Code. You help read, write, and run code in the user's workspace.",
     "",
-    "TOOLS: To use a tool, reply with a SINGLE JSON object on its own, and",
-    "nothing else. Available tools:",
+    "TOOLS: to use a tool, reply with EXACTLY ONE JSON object and NOTHING else",
+    "(no prose, no markdown fences). Available tools:",
     '  {"tool":"read_file","path":"relative/path"}',
     '  {"tool":"list_dir","path":"relative/path"}',
     '  {"tool":"edit_file","path":"relative/path","content":"FULL NEW FILE CONTENT"}',
     '  {"tool":"run_command","command":"shell command"}',
-    "Use ONE tool per step. After each tool call you receive its result, then",
-    "continue. When you are done, reply with a normal natural-language answer",
-    "(no JSON) as the FINAL response. Prefer reading relevant files before",
-    "editing. Keep edits minimal and correct.",
+    "",
+    "RULES:",
+    "- Paths MUST be RELATIVE to the workspace root. NEVER use absolute paths",
+    "  and NEVER invent paths like /workspace/root. Only use paths that exist",
+    "  (see the listing below) or that you discover via list_dir.",
+    "- Use list_dir to explore before reading/editing if unsure.",
+    "- One tool per step. After each tool you receive its result, then continue.",
+    "- When finished, reply with a normal natural-language answer (no JSON).",
     "",
     "CONTEXT:",
-    contextBlock(),
+    ctx,
   ].join("\n");
 }
 
 // ------------------------------------------------------------------ agent loop
 async function runAgent(userText, history, view) {
+  const sys = await buildSystemPrompt();
   const messages = [
-    { role: "system", content: systemPrompt() },
+    { role: "system", content: sys },
     ...history,
     { role: "user", content: userText },
   ];
   const maxSteps = cfg().get("maxSteps", 6);
+  const model = agentModel();
 
   for (let step = 0; step < maxSteps; step++) {
     view.post({ type: "status", text: "thinking…" });
     let res;
     try {
-      res = await gatewayChat(messages);
+      res = await gatewayChat(messages, model);
     } catch (e) {
       view.post({ type: "error", text: String(e.message || e) });
       return history;
     }
 
     const action = parseTool(res.content);
+
     if (!action) {
-      // final answer
+      // If it *looks* like a broken tool call, nudge instead of showing raw JSON
+      if (/"tool"\s*:/.test(res.content) && step < maxSteps - 1) {
+        view.post({
+          type: "tool",
+          tool: "(malformed tool call)",
+          detail: "asking the model to retry",
+          model: res.model,
+          tier: res.tier,
+        });
+        messages.push({ role: "assistant", content: res.content });
+        messages.push({
+          role: "user",
+          content:
+            "That was not valid. Reply with EXACTLY one JSON object and " +
+            'nothing else, e.g. {"tool":"list_dir","path":"."}. ' +
+            "Use RELATIVE paths only.",
+        });
+        continue;
+      }
       view.post({
         type: "assistant",
         text: res.content,
@@ -226,7 +291,6 @@ async function runAgent(userText, history, view) {
       return history;
     }
 
-    // it's a tool call
     view.post({
       type: "tool",
       tool: action.tool,
@@ -237,7 +301,7 @@ async function runAgent(userText, history, view) {
 
     let result;
     try {
-      result = await runTool(action, view);
+      result = await runTool(action);
     } catch (e) {
       result = "TOOL ERROR: " + (e.message || e);
     }
@@ -328,6 +392,28 @@ class ChatViewProvider {
 }
 
 // ------------------------------------------------------------------ activate
+function pollStats(provider, status) {
+  const base = cfg().get("gatewayUrl", "http://localhost:11435");
+  http
+    .get(base + "/stats", (res) => {
+      let b = "";
+      res.on("data", (c) => (b += c));
+      res.on("end", () => {
+        try {
+          const s = JSON.parse(b);
+          LARGE_MODEL = s.large_model || LARGE_MODEL;
+          status.text = `$(compass) ${s.pct_local}% local · $${(
+            s.est_saved || 0
+          ).toFixed(2)} saved`;
+          provider.post({ type: "stats", stats: s });
+        } catch (_) {}
+      });
+    })
+    .on("error", () => {
+      status.text = "$(compass) Router (offline)";
+    });
+}
+
 function activate(context) {
   const provider = new ChatViewProvider(context);
   context.subscriptions.push(
@@ -346,37 +432,19 @@ function activate(context) {
   status.show();
   context.subscriptions.push(status);
 
-  // poll gateway /stats for the status bar
-  const poll = setInterval(() => {
-    const base = cfg().get("gatewayUrl", "http://localhost:11435");
-    http
-      .get(base + "/stats", (res) => {
-        let b = "";
-        res.on("data", (c) => (b += c));
-        res.on("end", () => {
-          try {
-            const s = JSON.parse(b);
-            status.text = `$(compass) ${s.pct_local}% local · $${s.est_saved.toFixed(
-              2
-            )} saved`;
-            provider.post({ type: "stats", stats: s });
-          } catch (_) {}
-        });
-      })
-      .on("error", () => {
-        status.text = "$(compass) Router (offline)";
-      });
-  }, 4000);
+  pollStats(provider, status); // immediate, so the agent knows the large model
+  const poll = setInterval(() => pollStats(provider, status), 4000);
   context.subscriptions.push({ dispose: () => clearInterval(poll) });
 
   context.subscriptions.push(
     vscode.commands.registerCommand("llmrouter.focusChat", () =>
       vscode.commands.executeCommand("llmrouter.chat.focus")
     ),
-    vscode.commands.registerCommand("llmrouter.newChat", () =>
-      provider.post({ type: "clear" }) || (provider.history = [])
-    ),
-    vscode.commands.registerCommand("llmrouter.showStats", async () => {
+    vscode.commands.registerCommand("llmrouter.newChat", () => {
+      provider.history = [];
+      provider.post({ type: "clear" });
+    }),
+    vscode.commands.registerCommand("llmrouter.showStats", () => {
       const base = cfg().get("gatewayUrl", "http://localhost:11435");
       vscode.env.openExternal(vscode.Uri.parse(base + "/stats"));
     })

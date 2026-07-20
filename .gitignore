@@ -17,3 +17,7 @@ paper/*.fdb_latexmk
 
 # experiment logs
 experiments/build.log
+
+# VS Code extension
+vscode-extension/node_modules/
+*.vsix

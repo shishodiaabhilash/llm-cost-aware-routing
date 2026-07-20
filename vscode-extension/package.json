@@ -1,0 +1,60 @@
+{
+  "name": "llmroute-assistant",
+  "displayName": "LLM Router Assistant",
+  "description": "A local, agentic AI coding assistant powered by your llmroute gateway (Ollama). Chats, reads your code, proposes edits, and runs commands with your approval.",
+  "version": "0.1.0",
+  "publisher": "shishodiaabhilash",
+  "license": "MIT",
+  "repository": { "type": "git", "url": "https://github.com/shishodiaabhilash/llm-cost-aware-routing" },
+  "engines": { "vscode": "^1.85.0" },
+  "categories": ["AI", "Chat", "Machine Learning", "Programming Languages"],
+  "activationEvents": [],
+  "main": "./extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        { "id": "llmrouter", "title": "LLM Router", "icon": "media/icon.svg" }
+      ]
+    },
+    "views": {
+      "llmrouter": [
+        { "id": "llmrouter.chat", "name": "Assistant", "type": "webview" }
+      ]
+    },
+    "commands": [
+      { "command": "llmrouter.focusChat", "title": "LLM Router: Open Assistant" },
+      { "command": "llmrouter.newChat", "title": "LLM Router: New Chat", "icon": "$(add)" },
+      { "command": "llmrouter.showStats", "title": "LLM Router: Show Routing Stats" }
+    ],
+    "menus": {
+      "view/title": [
+        { "command": "llmrouter.newChat", "when": "view == llmrouter.chat", "group": "navigation" }
+      ]
+    },
+    "configuration": {
+      "title": "LLM Router Assistant",
+      "properties": {
+        "llmrouter.gatewayUrl": {
+          "type": "string",
+          "default": "http://localhost:11435",
+          "description": "Base URL of the running llmroute gateway."
+        },
+        "llmrouter.model": {
+          "type": "string",
+          "default": "auto",
+          "description": "Model to request. 'auto' lets the router decide the tier."
+        },
+        "llmrouter.maxSteps": {
+          "type": "number",
+          "default": 6,
+          "description": "Maximum agent tool steps per user turn."
+        },
+        "llmrouter.autoApproveReadTools": {
+          "type": "boolean",
+          "default": true,
+          "description": "Auto-run read-only tools (read_file, list_dir). Edits and commands always ask."
+        }
+      }
+    }
+  }
+}

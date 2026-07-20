@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "llmroute"
+version = "0.1.0"
+description = "A free-first, cost-aware OpenAI-compatible routing gateway for Ollama models."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Abhilash Shishodia" }]
+keywords = ["llm", "router", "ollama", "gateway", "cost-aware", "openai-compatible"]
+# Zero third-party dependencies: pure Python standard library.
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/shishodiaabhilash/llm-cost-aware-routing"
+Repository = "https://github.com/shishodiaabhilash/llm-cost-aware-routing"
+
+[project.scripts]
+llmroute = "llmroute.cli:main"
+
+[tool.setuptools]
+packages = ["llmroute"]

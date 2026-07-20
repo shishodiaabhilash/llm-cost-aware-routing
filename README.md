@@ -29,6 +29,67 @@ retain quality while cutting cost. Escalation is driven by:
 
 ---
 
+## The gateway (`llmroute`)
+
+`llmroute` is a small, **zero-dependency** (pure Python standard library),
+**OpenAI-compatible** gateway that sits in front of your Ollama models and routes
+each request. Because it speaks the OpenAI API *format*, any existing tool works
+with it unchanged — no OpenAI account, key, or servers are involved (the
+`api_key` field is ignored).
+
+### Install & run
+
+```sh
+# from this repo
+pip install .            # or: pip install -e .   (editable)
+llmroute serve           # starts http://127.0.0.1:11435/v1
+
+# or without installing, straight from the source tree:
+python3 -m llmroute.cli serve --small llama3.2:latest --large gpt-oss:120b-cloud
+```
+
+### Point any OpenAI-compatible client at it
+
+```python
+from openai import OpenAI
+client = OpenAI(base_url="http://localhost:11435/v1", api_key="unused")
+client.chat.completions.create(model="auto", messages=[{"role":"user","content":"..."}])
+# model="auto" triggers routing; any real model name is passed straight through
+```
+
+VS Code (Continue / Cline / aider) — set `apiBase` to `http://localhost:11435/v1`,
+`apiKey` to anything, `model` to `auto`.
+
+### CLI
+
+```sh
+llmroute route "reverse a string"      # one-shot: routes and prints the answer
+llmroute route "design a DP algorithm for edit distance" -v   # show routing
+llmroute models                        # list local Ollama models
+llmroute config                        # print effective configuration
+```
+
+### How it routes
+- A **complexity score** `x(q)` in `[0,1]` is computed from the request; if
+  `x >= tau` it goes to the large tier, else the small tier.
+- Optional **reactive escalation** (`--reactive`) re-routes obviously weak local
+  answers to the large tier.
+- **Resilience:** if the large tier is unavailable (e.g. cloud outage), the
+  gateway automatically **falls back** to the small local model instead of failing.
+- Every decision is logged and surfaced via `x_llmroute` in the response and
+  `X-LLMRoute-*` headers.
+
+### Configure
+Defaults work out of the box. Override via flags, or a JSON file at
+`~/.llmroute.json` (or `--config path.json`):
+
+```json
+{ "small_model": "llama3.2:latest", "large_model": "gpt-oss:120b-cloud",
+  "tau": 0.45, "reactive": true }
+```
+
+---
+
 ## Terminology (important, kept honest)
 
 - **Small local free model** — runs locally via Ollama at zero marginal cost and

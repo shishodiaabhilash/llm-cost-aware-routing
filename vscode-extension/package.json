@@ -24,11 +24,22 @@
     "commands": [
       { "command": "llmrouter.focusChat", "title": "LLM Router: Open Assistant" },
       { "command": "llmrouter.newChat", "title": "LLM Router: New Chat", "icon": "$(add)" },
-      { "command": "llmrouter.showStats", "title": "LLM Router: Show Routing Stats" }
+      { "command": "llmrouter.showStats", "title": "LLM Router: Show Routing Stats" },
+      { "command": "llmrouter.explain", "title": "LLM Router: Explain Selection" },
+      { "command": "llmrouter.fix", "title": "LLM Router: Fix Selection" },
+      { "command": "llmrouter.doc", "title": "LLM Router: Document Selection" },
+      { "command": "llmrouter.tests", "title": "LLM Router: Generate Tests" },
+      { "command": "llmrouter.toggleCompletions", "title": "LLM Router: Toggle Inline Completions" }
     ],
     "menus": {
       "view/title": [
         { "command": "llmrouter.newChat", "when": "view == llmrouter.chat", "group": "navigation" }
+      ],
+      "editor/context": [
+        { "command": "llmrouter.explain", "when": "editorHasSelection", "group": "llmrouter@1" },
+        { "command": "llmrouter.fix", "when": "editorHasSelection", "group": "llmrouter@2" },
+        { "command": "llmrouter.doc", "when": "editorHasSelection", "group": "llmrouter@3" },
+        { "command": "llmrouter.tests", "when": "editorHasSelection", "group": "llmrouter@4" }
       ]
     },
     "configuration": {
@@ -48,6 +59,16 @@
           "type": "string",
           "default": "",
           "description": "Model used for the agent loop. Empty = use the gateway's large tier (recommended for reliable tool use). 'auto' = let the router decide (cheaper, weaker at tool following). Or a specific model tag."
+        },
+        "llmrouter.completionModel": {
+          "type": "string",
+          "default": "",
+          "description": "Model used for inline (ghost-text) completions. Empty = use the gateway's small/local tier (fast). Or a specific model tag (a code model like qwen2.5-coder is recommended)."
+        },
+        "llmrouter.enableCompletions": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable inline (ghost-text) autocomplete."
         },
         "llmrouter.maxSteps": {
           "type": "number",

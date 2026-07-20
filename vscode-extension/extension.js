@@ -1,5 +1,8 @@
 // LLM Router Assistant -- an agentic AI coding assistant for VS Code, powered by
 // your local llmroute gateway. Pure JavaScript (no build step required).
+//
+// Features: agentic chat (tools), inline autocomplete (ghost text), and editor
+// commands (Explain / Fix / Document / Tests).
 
 const vscode = require("vscode");
 const http = require("http");
@@ -7,37 +10,36 @@ const https = require("https");
 const cp = require("child_process");
 const path = require("path");
 
-let LARGE_MODEL = null; // learned from the gateway's /stats (agent uses it)
+let SMALL_MODEL = null; // learned from the gateway's /stats
+let LARGE_MODEL = null;
 
 // ------------------------------------------------------------------ helpers
 function cfg() {
   return vscode.workspace.getConfiguration("llmrouter");
 }
-
 function workspaceRoot() {
   const f = vscode.workspace.workspaceFolders;
   return f && f.length ? f[0].uri.fsPath : process.cwd();
 }
 
-// Which model the AGENT loop should use. Agentic tool-following needs a capable
-// model, so by default we use the gateway's large tier. Users can override:
-//   ""      -> use the large tier (default, reliable)
-//   "auto"  -> let the router decide (cheaper, weaker at tool following)
-//   "<tag>" -> a specific model
+// The agent loop needs a capable model, so default to the large tier.
 function agentModel() {
   const m = cfg().get("agentModel", "");
   if (m === "auto") return "auto";
   if (m) return m;
   return LARGE_MODEL || "auto";
 }
+// Autocomplete needs low latency, so default to the small/local tier.
+function completionModel() {
+  const m = cfg().get("completionModel", "");
+  if (m) return m;
+  return SMALL_MODEL || "auto";
+}
 
-// Resolve a model-supplied path safely INSIDE the workspace. Model paths are
-// treated as relative: leading slashes / drive letters are stripped so common
-// hallucinations ("/src/x", "C:\\x") are normalised instead of rejected.
 function safeResolve(rel) {
   const root = workspaceRoot();
   let r = String(rel || ".").trim();
-  r = r.replace(/^([A-Za-z]:)?[\\/]+/, ""); // strip leading slash/drive
+  r = r.replace(/^([A-Za-z]:)?[\\/]+/, "");
   const abs = path.resolve(root, r);
   if (abs !== root && !abs.startsWith(root + path.sep)) {
     throw new Error("path escapes the workspace: " + rel);
@@ -60,7 +62,6 @@ async function listWorkspaceTop() {
   }
 }
 
-// POST to the gateway's /v1/chat/completions (non-streaming).
 function gatewayChat(messages, model) {
   return new Promise((resolve, reject) => {
     const base = cfg().get("gatewayUrl", "http://localhost:11435");
@@ -118,9 +119,7 @@ function parseTool(text) {
     try {
       const obj = JSON.parse(m);
       if (obj && typeof obj.tool === "string") return obj;
-    } catch (_) {
-      /* keep trying */
-    }
+    } catch (_) {}
   }
   return null;
 }
@@ -259,9 +258,7 @@ async function runAgent(userText, history, view) {
     }
 
     const action = parseTool(res.content);
-
     if (!action) {
-      // If it *looks* like a broken tool call, nudge instead of showing raw JSON
       if (/"tool"\s*:/.test(res.content) && step < maxSteps - 1) {
         view.post({
           type: "tool",
@@ -330,11 +327,17 @@ class ChatViewProvider {
     this.history = [];
     this.view = null;
   }
-
   post(msg) {
     if (this.view) this.view.webview.postMessage(msg);
   }
-
+  async sendUserMessage(text) {
+    await vscode.commands.executeCommand("llmrouter.chat.focus");
+    for (let i = 0; i < 20 && !this.view; i++)
+      await new Promise((r) => setTimeout(r, 100));
+    this.post({ type: "user-echo", text });
+    this.history = await runAgent(text, this.history, this);
+    this.post({ type: "status", text: "" });
+  }
   resolveWebviewView(webviewView) {
     this.view = webviewView;
     const w = webviewView.webview;
@@ -345,7 +348,6 @@ class ChatViewProvider {
       ],
     };
     w.html = this.html(w);
-
     w.onDidReceiveMessage(async (m) => {
       if (m.type === "send") {
         this.post({ type: "user-echo", text: m.text });
@@ -357,7 +359,6 @@ class ChatViewProvider {
       }
     });
   }
-
   html(webview) {
     const nonce = String(Math.random()).slice(2);
     const mediaUri = (f) =>
@@ -376,10 +377,7 @@ class ChatViewProvider {
 <meta http-equiv="Content-Security-Policy" content="${csp}">
 <link rel="stylesheet" href="${mediaUri("main.css")}">
 </head><body>
-<div id="header">
-  <span id="brand">LLM Router</span>
-  <span id="stats" title="routing stats"></span>
-</div>
+<div id="header"><span id="brand">LLM Router</span><span id="stats"></span></div>
 <div id="messages"></div>
 <div id="composer">
   <textarea id="input" rows="2" placeholder="Ask about your code, request an edit, or a command…"></textarea>
@@ -389,6 +387,93 @@ class ChatViewProvider {
 <script nonce="${nonce}" src="${mediaUri("main.js")}"></script>
 </body></html>`;
   }
+}
+
+// ------------------------------------------------------------------ inline completion
+function trimCompletion(text) {
+  let t = String(text).replace(/```[a-zA-Z]*\n?/g, "").replace(/```/g, "");
+  t = t.replace(/^[\r\n]+/, "");
+  const lines = t.split("\n").slice(0, 12);
+  return lines.join("\n").replace(/\s+$/, "");
+}
+
+function makeInlineProvider() {
+  return {
+    async provideInlineCompletionItems(document, position, ctxObj, token) {
+      if (!cfg().get("enableCompletions", true)) return;
+      await new Promise((r) => setTimeout(r, 250)); // debounce
+      if (token.isCancellationRequested) return;
+
+      const prefix = document
+        .getText(new vscode.Range(new vscode.Position(0, 0), position))
+        .slice(-1500);
+      const endPos = document.lineAt(document.lineCount - 1).range.end;
+      const suffix = document
+        .getText(new vscode.Range(position, endPos))
+        .slice(0, 400);
+      if (!prefix.trim()) return;
+
+      const messages = [
+        {
+          role: "system",
+          content:
+            "You are a code completion engine. Output ONLY the code that should " +
+            "be inserted at the cursor to continue the program. No explanations, " +
+            "no markdown fences, no repetition of existing code.",
+        },
+        {
+          role: "user",
+          content:
+            `Language: ${document.languageId}\n<BEFORE_CURSOR>\n${prefix}\n` +
+            (suffix ? `<AFTER_CURSOR>\n${suffix}\n` : "") +
+            `Provide only the insertion at the cursor.`,
+        },
+      ];
+      let res;
+      try {
+        res = await gatewayChat(messages, completionModel());
+      } catch (_) {
+        return;
+      }
+      if (token.isCancellationRequested) return;
+      const text = trimCompletion(res.content);
+      if (!text) return;
+      return [
+        new vscode.InlineCompletionItem(
+          text,
+          new vscode.Range(position, position)
+        ),
+      ];
+    },
+  };
+}
+
+// ------------------------------------------------------------------ editor commands
+function selectionOrFile() {
+  const ed = vscode.window.activeTextEditor;
+  if (!ed) return null;
+  const sel = ed.document.getText(ed.selection);
+  const text = sel && sel.trim() ? sel : ed.document.getText();
+  const rel = path.relative(workspaceRoot(), ed.document.uri.fsPath);
+  return { text, lang: ed.document.languageId, rel };
+}
+
+function editorCommand(kind, provider) {
+  return async () => {
+    const s = selectionOrFile();
+    if (!s) {
+      vscode.window.showInformationMessage("Open a file first.");
+      return;
+    }
+    const fence = "```" + s.lang + "\n" + s.text + "\n```";
+    const prompts = {
+      explain: `Explain what this code does (from ${s.rel}):\n\n${fence}`,
+      fix: `Find and fix bugs in this code (from ${s.rel}). Explain the fix and show the corrected code:\n\n${fence}`,
+      doc: `Add clear docstrings/comments to this code (from ${s.rel}) and return the documented version:\n\n${fence}`,
+      tests: `Write thorough unit tests for this code (from ${s.rel}):\n\n${fence}`,
+    };
+    await provider.sendUserMessage(prompts[kind] || prompts.explain);
+  };
 }
 
 // ------------------------------------------------------------------ activate
@@ -401,6 +486,7 @@ function pollStats(provider, status) {
       res.on("end", () => {
         try {
           const s = JSON.parse(b);
+          SMALL_MODEL = s.small_model || SMALL_MODEL;
           LARGE_MODEL = s.large_model || LARGE_MODEL;
           status.text = `$(compass) ${s.pct_local}% local · $${(
             s.est_saved || 0
@@ -422,6 +508,14 @@ function activate(context) {
     })
   );
 
+  // inline (ghost-text) completions
+  context.subscriptions.push(
+    vscode.languages.registerInlineCompletionItemProvider(
+      { pattern: "**" },
+      makeInlineProvider()
+    )
+  );
+
   const status = vscode.window.createStatusBarItem(
     vscode.StatusBarAlignment.Right,
     100
@@ -432,7 +526,7 @@ function activate(context) {
   status.show();
   context.subscriptions.push(status);
 
-  pollStats(provider, status); // immediate, so the agent knows the large model
+  pollStats(provider, status);
   const poll = setInterval(() => pollStats(provider, status), 4000);
   context.subscriptions.push({ dispose: () => clearInterval(poll) });
 
@@ -447,6 +541,17 @@ function activate(context) {
     vscode.commands.registerCommand("llmrouter.showStats", () => {
       const base = cfg().get("gatewayUrl", "http://localhost:11435");
       vscode.env.openExternal(vscode.Uri.parse(base + "/stats"));
+    }),
+    vscode.commands.registerCommand("llmrouter.explain", editorCommand("explain", provider)),
+    vscode.commands.registerCommand("llmrouter.fix", editorCommand("fix", provider)),
+    vscode.commands.registerCommand("llmrouter.doc", editorCommand("doc", provider)),
+    vscode.commands.registerCommand("llmrouter.tests", editorCommand("tests", provider)),
+    vscode.commands.registerCommand("llmrouter.toggleCompletions", async () => {
+      const cur = cfg().get("enableCompletions", true);
+      await cfg().update("enableCompletions", !cur, true);
+      vscode.window.showInformationMessage(
+        "LLM Router inline completions " + (!cur ? "enabled" : "disabled")
+      );
     })
   );
 }
